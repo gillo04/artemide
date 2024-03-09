@@ -1,11 +1,10 @@
-#include "raylib.h"
-#include "raymath.h"
 #include <stdio.h>
 
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 800
-#define ARROW_THICKNESS 4.
-#define RESISTOR_HEIGHT 24
+#include "raylib.h"
+#include "raymath.h"
+
+#include "draw.h"
+
 #define SNAP_DIST 30
 #define MAX_NODES 50
 
@@ -23,148 +22,74 @@ enum {
 typedef struct {
     int type;
     int a, b;
-    int id;
+    // int id;
 } Node;
 
-void draw_arrow(Vector2 start, Vector2 end, Color color) {
-    DrawLineEx(start, end, ARROW_THICKNESS, color);
-
-    Vector2 dir = Vector2Scale(
-                    Vector2Normalize(
-                        Vector2Subtract(end, start)), 20);
-
-    DrawLineEx(end, Vector2Add(end, Vector2Rotate(dir, PI*3/4)), ARROW_THICKNESS, color);
-    DrawLineEx(end, Vector2Add(end, Vector2Rotate(dir, -PI*3/4)), ARROW_THICKNESS, color);
-}
-
-void draw_resistor(Vector2 start, Vector2 end) {
-    Vector2 dir = Vector2Normalize(Vector2Subtract(end, start));
-    Vector2 up_dir = Vector2Rotate(dir, PI*1/3);
-    Vector2 down_dir = Vector2Rotate(dir, -PI*1/3);
-
-    // Draw wire a
-    float wire_len = Vector2Length(Vector2Subtract(end, start)) / 2 - 30;
-
-    Vector2 cur_start = Vector2Add(start, Vector2Scale(dir, wire_len));
-    DrawLineEx(start, cur_start, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-
-    // Draw resistor
-    Vector2 tmp = Vector2Add(cur_start, Vector2Scale(down_dir, RESISTOR_HEIGHT/2));
-    DrawLineEx(cur_start, tmp, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-    cur_start = tmp;
-
-    Vector2 *vec = &up_dir;
-    for (int i = 0; i < 5; i++) {
-        tmp = Vector2Add(cur_start, Vector2Scale(*vec, RESISTOR_HEIGHT));
-        DrawLineEx(cur_start, tmp, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-        cur_start = tmp;
-
-        if (vec == &down_dir) {
-            vec = &up_dir;
-        } else {
-            vec = &down_dir;
+int get_snap(Vector2 points[], int point_c) {
+    Vector2 mouse = GetMousePosition();
+    int min_dist = Vector2Length(Vector2Subtract(mouse, points[0]));
+    int min_i = 0;
+    for (int i = 1; i < point_c; i++) {
+        int tmp = Vector2Length(Vector2Subtract(mouse, points[i]));
+        if (tmp < min_dist) {
+            min_dist = tmp;
+            min_i = i;
         }
     }
-    tmp = Vector2Add(cur_start, Vector2Scale(*vec, RESISTOR_HEIGHT/2));
-    DrawLineEx(cur_start, tmp, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-    cur_start = tmp;
-
-    // Draw wire b
-    DrawLineEx(cur_start, end, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-}
-
-void draw_wire(Vector2 start, Vector2 end) {
-    DrawLineEx(start, end, ARROW_THICKNESS, (Color) {0, 0, 0, 255});
-}
-
-int can_snap_to(Vector2 point) {
-    return Vector2Length(Vector2Subtract(GetMousePosition(), point)) <= SNAP_DIST;
+    if (min_dist <= SNAP_DIST) {
+        return min_i;
+    }
+    return -1;
 }
 
 int main() {
     Vector2 points[MAX_NODES*2];
-    int point_count = 0;
+    int point_c = 0;
 
     Node nodes[MAX_NODES];
-    int node_count = 0;
+    int node_c = 0;
 
-    int comp_count = 0;
-    int wire_count = 0;
-
-    char graph[MAX_NODES*2][MAX_NODES*2];
-    for (int i = 0; i < MAX_NODES*2; i++) {
-        for (int j = 0; j < MAX_NODES*2; j++) {
-            graph[i][j] = 0;
-        }
-    }
+    int comp_c = 0;
+    int wire_c = 0;
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib [core] example - basic window");
 
     // State
     int state = S_IDLE;
-    int current_component = C_RESISTOR;
+    int current_component = C_WIRE;
 
     Vector2 cur_start, cur_end;
     while (!WindowShouldClose()) {
+        int snap = get_snap(points, point_c - (state == S_TRACING));
+
         // Handle events
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             state = S_TRACING;
-            nodes[node_count].start = GetMousePosition();
-            nodes[node_count].a = -1;
-            for (int i = 0; i < node_count; i++) {
-                if (can_snap_to(nodes[i].start)) {
-                    // nodes[node_count].start = nodes[i].start;
-                    nodes[node_count].a = i*2;
-                    break;
-                }
-                if (can_snap_to(nodes[i].end)) {
-                    // nodes[node_count].start = nodes[i].end;
-                    nodes[node_count].a = i*2+1;
-                    break;
-                }
-            }
-            nodes[node_count].type = current_component;
-            if (current_component == C_WIRE) {
-                nodes[node_count].id = wire_count;
+
+            if (snap != -1) {
+                points[point_c] = GetMousePosition();       // b
+                nodes[node_c].a = snap;
+                nodes[node_c].b = point_c;
+                point_c += 1;
             } else {
-                nodes[node_count].id = comp_count;
+                points[point_c] = GetMousePosition();       // a
+                points[point_c+1] = GetMousePosition();     // b
+                nodes[node_c].a = point_c;
+                nodes[node_c].b = point_c+1;
+                point_c += 2;
             }
-
-            // Update graph
-            if (nodes[node_count].a != -1) {
-                graph[nodes[node_count].a][node_count*2] = 1;
-                graph[node_count*2][nodes[node_count].a] = 1;
-
-                for (int i = 0; i < node_count*2; i++) {
-                    if (graph[i][nodes[node_count].a]) {
-                        graph[i][node_count*2] = 1;
-                        graph[node_count*2][i] = 1;
-                    }
-                }
-            }
-
-            node_count++;
+            nodes[node_c].type = current_component;
         }
+
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
             state = S_IDLE;
-            if (current_component == C_WIRE) {
-                wire_count++;
-            } else {
-                comp_count++;
-            }
-            // Update graph
-            if (nodes[node_count-1].b != -1) {
-                graph[nodes[node_count-1].b][(node_count-1)*2+1] = 1;
-                graph[(node_count-1)*2+1][nodes[node_count-1].b] = 1;
 
-                for (int i = 0; i < (node_count-1)*2; i++) {
-                    if (graph[i][nodes[node_count-1].b]) {
-                        graph[i][(node_count-1)*2+1] = 1;
-                        graph[(node_count-1)*2+1][i] = 1;
-                    }
-                }
+            if (snap != -1) {
+                point_c -= 1;
             }
+            node_c++;
         }
+
         switch (GetKeyPressed()) {
             case KEY_ONE:
                 current_component = C_WIRE;
@@ -174,17 +99,7 @@ int main() {
                 break;
             case KEY_SPACE:
                 printf("Converting to graph\n");
-                // nodes_to_graph(nodes, graph);
-                for (int i = 0; i < node_count*2; i++) {
-                    for (int j = 0; j < node_count*2; j++) {
-                        printf("%d ", graph[i][j]);
-                    }
-                    printf("\n");
-                }
-
-                for (int i = 0; i < node_count; i++) {
-                    printf("%d\t%d\n", nodes[i].a, nodes[i].b);
-                }
+                printf("%d\n", point_c);
                 break;
             default:
                 break;
@@ -195,19 +110,11 @@ int main() {
             case S_IDLE:
                 break;
             case S_TRACING:
-                nodes[node_count-1].end = GetMousePosition();
-                nodes[node_count-1].b = -1;
-                for (int i = 0; i < node_count-1; i++) {
-                    if (can_snap_to(nodes[i].start)) {
-                        // nodes[node_count-1].end = nodes[i].start;
-                        nodes[node_count-1].b = i*2;
-                        break;
-                    }
-                    if (can_snap_to(nodes[i].end)) {
-                        // nodes[node_count-1].end = nodes[i].end;
-                        nodes[node_count-1].b = i*2+1;
-                        break;
-                    }
+                if (snap != -1) {
+                    nodes[node_c].b = snap;
+                } else {
+                    nodes[node_c].b = point_c-1;
+                    points[nodes[node_c].b] = GetMousePosition();
                 }
                 break;
         }
@@ -227,22 +134,19 @@ int main() {
                 break;
         }
 
-        for (int i = 0; i < node_count; i++) {
+        for (int i = 0; i < (state == S_TRACING) + node_c; i++) {
             switch (nodes[i].type) {
                 case C_WIRE:
-                    draw_wire(nodes[i].start, nodes[i].end);
+                    draw_wire(points[nodes[i].a], points[nodes[i].b]);
                     break;
                 case C_RESISTOR:
-                    draw_resistor(nodes[i].start, nodes[i].end);
+                    draw_resistor(points[nodes[i].a], points[nodes[i].b]);
                     break;
             }
+        }
 
-            if (can_snap_to(nodes[i].start)) {
-                DrawCircleV(nodes[i].start, 7, (Color) {0, 150, 0, 255});
-            }
-            if (can_snap_to(nodes[i].end)) {
-                DrawCircleV(nodes[i].end, 7, (Color) {0, 150, 0, 255});
-            }
+        if (snap != -1) {
+            DrawCircleV(points[snap], 10, (Color) {0,150, 0, 255});
         }
         EndDrawing();
     }
