@@ -74,6 +74,8 @@ void simplify_circuit(Vector2 points[], int point_c,
                 nodes[i].a = last_conn;
                 nodes[adj].a = -1;
                 nodes[adj].b = -1;
+
+                nodes[i].value += nodes[adj].value;
             }
         }
 
@@ -99,7 +101,7 @@ void simplify_circuit(Vector2 points[], int point_c,
                 nodes[adj].a = -1;
                 nodes[adj].b = -1;
 
-
+                nodes[i].value += nodes[adj].value;
             }
         }
     }
