@@ -9,6 +9,8 @@
 
 void draw_arrow(Vector2 start, Vector2 end, Color color);
 
-void draw_resistor(Vector2 start, Vector2 end);
+void draw_resistor(Vector2 start, Vector2 end, int val);
 
 void draw_wire(Vector2 start, Vector2 end);
+
+void draw_current_comp(int current_component);
