@@ -13,6 +13,6 @@ enum {
 typedef struct {
     int type;
     int a, b;
-    int value;
+    float value;
 } Node;
 

@@ -14,7 +14,7 @@ void draw_arrow(Vector2 start, Vector2 end, Color color) {
     DrawLineEx(end, Vector2Add(end, Vector2Rotate(dir, -PI*3/4)), ARROW_THICKNESS, color);
 }
 
-void draw_resistor(Vector2 start, Vector2 end, int val) {
+void draw_resistor(Vector2 start, Vector2 end, float val) {
     Vector2 dir = Vector2Normalize(Vector2Subtract(end, start));
     Vector2 up_dir = Vector2Rotate(dir, PI*1/3);
     Vector2 down_dir = Vector2Rotate(dir, -PI*1/3);
@@ -52,7 +52,7 @@ void draw_resistor(Vector2 start, Vector2 end, int val) {
     // Draw label
     Vector2 middle = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5f), start);
     char buff[10];
-    sprintf(buff, "%d", val);
+    sprintf(buff, "%.2f", val);
     DrawText(buff, middle.x + 20, middle.y + 20, 30, (Color) {0, 0, 0, 255});
 }
 

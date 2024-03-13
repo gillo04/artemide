@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
-#include <stdio.h>
+#include <algorithm>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -71,11 +71,6 @@ void s_resistor_series(vector<Vector2> &points, vector<Node> &nodes) {
         vector<bool> visited(points.size(), false);
         vector<int> conn = get_connected(i, adj_list, nodes, visited);
 
-        for (int j = 0; j < conn.size(); j++) {
-            cout << conn[j] << " ";
-        }
-        cout << endl;
-
         if (conn.size() == 2) {
             if (nodes[conn[0]].type == C_RESISTOR &&
                 nodes[conn[1]].type == C_RESISTOR) { // TODO: soon to remove
@@ -86,6 +81,34 @@ void s_resistor_series(vector<Vector2> &points, vector<Node> &nodes) {
             }
         }
 
+    }
+}
+
+void s_resistor_parallel(vector<Vector2> &points, vector<Node> &nodes) {
+    AdjList adj_list = adjacency_list(points, nodes);
+
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i].type == C_WIRE || nodes[i].a == -1) {
+            continue;
+        }
+
+        vector<bool> visited(points.size(), false);
+        vector<int> conn_a = get_connected(nodes[i].a, adj_list, nodes, visited);
+
+        fill(visited.begin(), visited.end(), false);
+        vector<int> conn_b = get_connected(nodes[i].b, adj_list, nodes, visited);
+
+        for (int j = 0; j < conn_a.size(); j++) {
+            if (nodes[conn_a[j]].type != C_RESISTOR || conn_a[j] == i) {
+                continue;
+            }
+
+            if (find(conn_b.begin(), conn_b.end(), conn_a[j]) != conn_b.end()) {
+                nodes[i].value = 1/(1/nodes[i].value + 1/nodes[conn_a[j]].value);
+                nodes[conn_a[j]].a = -1;
+                nodes[conn_a[j]].b = -1;
+            }
+        }
     }
 }
 
@@ -124,7 +147,7 @@ int main() {
                 }
 
                 nodes.back().type = current_component;
-                nodes.back().value = nodes.size() * 5;
+                nodes.back().value = 5;
             } else {
                 selected = snap;
             }
@@ -153,6 +176,7 @@ int main() {
             case KEY_SPACE:
                 printf("Simplifying\n");
                 s_resistor_series(points, nodes);
+                s_resistor_parallel(points, nodes);
                 break;
             default:
                 break;
