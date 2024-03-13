@@ -105,9 +105,33 @@ void s_resistor_parallel(vector<Vector2> &points, vector<Node> &nodes) {
 
             if (find(conn_b.begin(), conn_b.end(), conn_a[j]) != conn_b.end()) {
                 nodes[i].value = 1/(1/nodes[i].value + 1/nodes[conn_a[j]].value);
+                // nodes.erase(nodes.begin() + conn_a[j]);
                 nodes[conn_a[j]].a = -1;
                 nodes[conn_a[j]].b = -1;
             }
+        }
+    }
+}
+
+void s_useless_wires(vector<Vector2> &points, vector<Node> &nodes) {
+    AdjList adj_list = adjacency_list(points, nodes);
+    for (int i = 0; i < points.size(); i++) {
+        if (adj_list[i].size() == 1) {
+            int j = get<1>(adj_list[i][0]);
+            if (nodes[j].type == C_WIRE) {
+                // nodes.erase(nodes.begin() + conn[0]);
+                nodes[j].a = -1;
+                nodes[j].b = -1;
+                adj_list[i].clear();
+            }
+        }
+    }
+}
+
+void s_remove_dead_nodes(vector<Vector2> &points, vector<Node> &nodes) {
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i].a == -1) {
+            nodes.erase(nodes.begin() + i);
         }
     }
 }
@@ -177,6 +201,8 @@ int main() {
                 printf("Simplifying\n");
                 s_resistor_series(points, nodes);
                 s_resistor_parallel(points, nodes);
+                s_useless_wires(points, nodes);
+                s_remove_dead_nodes(points, nodes);
                 break;
             default:
                 break;
