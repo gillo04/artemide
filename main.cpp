@@ -11,31 +11,9 @@
 
 #define SNAP_DIST 30
 
-using namespace std;
+//using namespace std;
 
-/*
-int get_snap(vector<Vector2> &pts, int ignore) {
-    if (pts.size() - ignore <= 0) {
-        return -1;
-    }
-
-    Vector2 mouse = GetMousePosition();
-    int min_dist = Vector2Length(Vector2Subtract(mouse, pts[0]));
-    int min_i = 0;
-    for (int i = 1; i < pts.size() - ignore; i++) {
-        int tmp = Vector2Length(Vector2Subtract(mouse, pts[i]));
-        if (tmp < min_dist) {
-            min_dist = tmp;
-            min_i = i;
-        }
-    }
-    if (min_dist <= SNAP_DIST) {
-        return min_i;
-    }
-    return -1;
-}
-
-typedef vector<vector<tuple<int, int>>> AdjList;
+/*typedef vector<vector<tuple<int, int>>> AdjList;
 AdjList adjacency_list(vector<Vector2> &pts, vector<Node> &circ.comps) {
     AdjList adj_list(pts.size());
     for (int i = 0; i < circ.comps.size(); i++) {
@@ -137,9 +115,6 @@ void s_remove_dead_circ.comps(vector<Vector2> &pts, vector<Node> &nodes) {
 }*/
 
 int main() {
-    /*vector<Vector2> pts;
-    vector<Node> circ.comps;*/
-
     Circuit circ;
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Artemide");
@@ -151,7 +126,7 @@ int main() {
     int selected = -1;
     Vector2 tmp_a, tmp_b;
     while (!WindowShouldClose()) {
-        int snap = circ.get_snap(GetMousePosition(), state == S_TRACING);
+        int snap = circ.get_snap(GetMousePosition(), 0);
 
         // Handle events
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
@@ -159,37 +134,12 @@ int main() {
 
             if (current_component != C_SELECT) {
                 if (snap != -1) {
-                    circ.add_point(Point(GetMousePosition(), -1));
-                    circ.add_component(Component(
-                        current_component,
-                        snap,
-                        circ.pts.size()-1,
-                        5
-                    ));
-                    /*pts.push_back(GetMousePosition());
-                    circ.comps.push_back({
-                        .a = snap,
-                        .b = pts.size()-1
-                    });*/
+                    tmp_a = circ.pts[snap].pos;
+                    tmp_b = circ.pts[snap].pos;
                 } else {
-                    circ.add_point(Point(GetMousePosition(), -1));
-                    circ.add_point(Point(GetMousePosition(), -1));
-                    circ.add_component(Component(
-                        current_component,
-                        circ.pts.size()-2,
-                        circ.pts.size()-1,
-                        5
-                    ));
-                    /*pts.push_back(GetMousePosition());
-                    pts.push_back(GetMousePosition());
-                    circ.comps.push_back({
-                        .a = pts.size()-2,
-                        .b = pts.size()-1
-                    });*/
+                    tmp_a = GetMousePosition();
+                    tmp_b = GetMousePosition();
                 }
-
-                /*circ.comps.back().type = current_component;
-                circ.comps.back().value = 5;*/
             } else {
                 selected = snap;
             }
@@ -199,9 +149,7 @@ int main() {
             state = S_IDLE;
 
             if (current_component != C_SELECT) {
-                if (snap != -1) {
-                    circ.pts.pop_back();
-                }
+                circ.add_component(current_component, tmp_a, tmp_b, 5);
             }
         }
 
@@ -217,6 +165,7 @@ int main() {
                 break;
             case KEY_SPACE:
                 printf("Simplifying\n");
+                circ.simplify();
                 /*s_resistor_series(pts, circ.comps);
                 s_resistor_parallel(pts, circ.comps);
                 s_useless_wires(pts, circ.comps);
@@ -236,10 +185,9 @@ int main() {
             case S_TRACING:
                 if (current_component != C_SELECT) {
                     if (snap != -1) {
-                        circ.comps.back().b = snap;
+                        tmp_b = circ.pts[snap].pos;
                     } else {
-                        circ.comps.back().b = circ.pts.size()-1;
-                        circ.pts[circ.comps.back().b].pos = GetMousePosition();
+                        tmp_b = GetMousePosition();
                     }
                 } else {
                     circ.pts[selected].pos = GetMousePosition();
@@ -251,6 +199,17 @@ int main() {
         BeginDrawing();
         ClearBackground((Color) {255, 255, 255, 255});
 
+        if (state == S_TRACING) {
+            // TODO: fix redundancy with circuit.cpp
+            switch (current_component) {
+                case C_WIRE:
+                    draw_wire(tmp_a, tmp_b);
+                    break;
+                case C_RESISTOR:
+                    draw_resistor(tmp_a, tmp_b, 69);
+                    break;
+            }
+        }
         draw_current_comp(current_component);
         circ.draw();
 

@@ -77,3 +77,15 @@ void draw_current_comp(int current_component) {
             break;
     }
 }
+
+void draw_component(Vector2 a, Vector2 b, int type, float value) {
+    switch (type) {
+        case C_WIRE:
+            draw_wire(a, b);
+            break;
+        case C_RESISTOR:
+            draw_resistor(a, b, value);
+            break;
+    }
+}
+
