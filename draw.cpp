@@ -1,7 +1,8 @@
 #include "draw.h"
-#include "structures.h"
 #include <stdio.h> 
 #include <stdlib.h> 
+
+#include "circuit.h"
 
 void draw_arrow(Vector2 start, Vector2 end, Color color) {
     DrawLineEx(start, end, ARROW_THICKNESS, color);
