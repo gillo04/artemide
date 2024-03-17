@@ -81,21 +81,20 @@ bool Circuit::simplify() {
 
     while (modified) {
         modified = false;
+        build_adjacency_list();
         build_abstract_circuit();
         modified |= s_series();
-
-        cout << endl << endl;
-        build_abstract_circuit();
+        // build_abstract_circuit();
         modified |= s_parallel();
-
-        // modified |= s_useless_wires();
+        modified |= s_useless_wires();
         s_remove_dead_components();
     }
     return modified;
 }
 
-vector<vector<tuple<int, int>>> Circuit::adjacency_list() {
-    vector<vector<tuple<int, int>>> adj_list(pts.size());
+void Circuit::build_adjacency_list() {
+    adj_list.clear();
+    adj_list.resize(pts.size());
     for (int i = 0; i < comps.size(); i++) {
         if (comps[i].a == -1) {
             continue;
@@ -103,10 +102,9 @@ vector<vector<tuple<int, int>>> Circuit::adjacency_list() {
         adj_list[comps[i].a].push_back({comps[i].b, i});
         adj_list[comps[i].b].push_back({comps[i].a, i});
     }
-    return adj_list;
 }
 
-vector<int> Circuit::get_connected(int p, vector<vector<tuple<int, int>>> &adj_list) {
+vector<int> Circuit::get_connected(int p) {
     vector<int> connected = {};
     if (pts[p].visited) {
         return connected;
@@ -116,7 +114,7 @@ vector<int> Circuit::get_connected(int p, vector<vector<tuple<int, int>>> &adj_l
     pts[p].node = nodes.size();
     for (int i = 0; i < adj_list[p].size(); i++) {
         if (comps[get<1>(adj_list[p][i])].type == C_WIRE) {
-            vector<int> tmp = get_connected(get<0>(adj_list[p][i]), adj_list);
+            vector<int> tmp = get_connected(get<0>(adj_list[p][i]));
             connected.insert(connected.end(), tmp.begin(), tmp.end());
         } else {
             connected.push_back(get<1>(adj_list[p][i]));
@@ -134,12 +132,15 @@ void Circuit::build_abstract_circuit() {
         pts[i].visited = false;
     }
 
-    vector<vector<tuple<int, int>>> adj_list = adjacency_list();
     for (int i = 0; i < comps.size(); i++) {
+        if (comps[i].type == C_WIRE) {
+            continue;
+        }
+
         if (pts[comps[i].a].visited) {
             arches[i].a = pts[comps[i].a].node;
         } else {
-            vector<int> connected = get_connected(comps[i].a, adj_list);
+            vector<int> connected = get_connected(comps[i].a);
             nodes.push_back(connected);
             arches[i].a = nodes.size() - 1;
         }
@@ -147,7 +148,7 @@ void Circuit::build_abstract_circuit() {
         if (pts[comps[i].b].visited) {
             arches[i].b = pts[comps[i].b].node;
         } else {
-            vector<int> connected = get_connected(comps[i].b, adj_list);
+            vector<int> connected = get_connected(comps[i].b);
             nodes.push_back(connected);
             arches[i].b = nodes.size() - 1;
         }
@@ -223,10 +224,10 @@ bool Circuit::s_parallel() {
 
 bool Circuit::s_useless_wires() {
     bool changed = false;
-    for (int i = 0; i < nodes.size(); i++) {
-        if (nodes[i].size() == 1 && comps[nodes[i][0]].type == C_WIRE) {
-            comps[nodes[i][0]].a = -1;
-            comps[nodes[i][0]].b = -1;
+    for (int i = 0; i < adj_list.size(); i++) {
+        if (adj_list[i].size() == 1 && comps[get<1>(adj_list[i][0])].type == C_WIRE) {
+            comps[get<1>(adj_list[i][0])].a = -1;
+            comps[get<1>(adj_list[i][0])].b = -1;
             changed = true;
         }
     }
@@ -234,10 +235,18 @@ bool Circuit::s_useless_wires() {
 }
 
 void Circuit::s_remove_dead_components() {
+    // Erase components
     for (int i = 0; i < comps.size(); i++) {
         if (comps[i].a == -1) {
             comps.erase(comps.begin() + i);
             i--;
         }
     }
+
+    // Erase points
+    /*for (int i = 0; i < adj_list.size(); i++) {
+        if (adj_list[i].size() == 0) {
+            pts.erase(pts.begin() + i);
+        }
+    }*/
 }

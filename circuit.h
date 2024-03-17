@@ -42,6 +42,8 @@ public:
   vector<Component> comps;
 
 private:
+  // Contains adjacency list of the graphical circuit (pts and comps)
+  vector<vector<tuple<int, int>>> adj_list;
   // Contains a list of components that are attached to a graph node
   vector<vector<int>> nodes;
   // Contains only non-wire components. a and b refer to nodes, not points
@@ -62,10 +64,10 @@ public:
   bool simplify();
 
 private:
-  // Returns adjacency list for graphical circuit
-  vector<vector<tuple<int, int>>> adjacency_list();
+  // Populates adjacency list for graphical circuit
+  void build_adjacency_list();
   // Returns a list of wire connected components to point p
-  vector<int> get_connected(int p, vector<vector<tuple<int, int>>> &adj_list);
+  vector<int> get_connected(int p);
   // Populates nodes and arches
   void build_abstract_circuit();
   // Marks arch for deletion
