@@ -1,4 +1,5 @@
 #include <vector>
+#include <string>
 #include <tuple>
 #include "raylib.h"
 
@@ -10,7 +11,7 @@ enum {
 };
 
 enum {
-    C_SELECT,
+    C_SELECT = 0,
     C_WIRE,
     C_RESISTOR,
     C_TERMINAL
@@ -22,7 +23,7 @@ public:
   bool visited;
   int node;
 
-  Point(Vector2 p, bool n);
+  Point(Vector2 p);
 };
 
 class Component {
@@ -50,7 +51,12 @@ private:
   vector<Component> arches;
 
 public:
+  // Constructor
   Circuit();
+  // Load circuit from file at path
+  Circuit(string path);
+  // Prints circuit data (in the future it will be stored in a file)
+  void print_circuit();
   // Adds point. If .node = -1, the point is a new node 
   void add_point(Point pt);
   // Adds the component to the circuit

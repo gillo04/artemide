@@ -12,7 +12,7 @@
 #define SNAP_DIST 30
 
 int main() {
-    Circuit circ;
+    Circuit circ("./circuits/parallel.circ");
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Artemide");
 

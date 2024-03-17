@@ -54,8 +54,6 @@ void Circuit::print_circuit() {
     for (int i = 0; i < comps.size(); i++) {
         out += to_string(comps[i].type) + " " + to_string(comps[i].a) + " " + to_string(comps[i].b) + " " + to_string(comps[i].value) + "\n";
     }
-
-    cout << out << endl;
 }
 
 void Circuit::add_point(Point pt) {
@@ -115,13 +113,13 @@ int Circuit::get_snap(Vector2 mouse, int ignore) {
 
 bool Circuit::simplify() {
     bool modified = true;
-    // print_circuit();
 
     while (modified) {
         modified = false;
         build_adjacency_list();
         build_abstract_circuit();
         modified |= s_series();
+        // build_abstract_circuit();
         modified |= s_parallel();
         modified |= s_useless_wires();
         s_remove_dead_components();
@@ -194,7 +192,7 @@ void Circuit::build_abstract_circuit() {
         arches[i].value = comps[i].value;
     }
 
-    /*cout << "pts: " << pts.size() << endl;
+    cout << "pts: " << pts.size() << endl;
     // print arches 
     for (int i = 0; i < arches.size(); i++) {
         cout << "arches[" << i << "]: " << arches[i].a << " " << arches[i].b << endl;
@@ -206,7 +204,7 @@ void Circuit::build_abstract_circuit() {
             cout << nodes[i][j] << " ";
         }
         cout << endl;
-    }*/
+    }
 }
 
 void Circuit::mark_arch_for_deletion(int i) {
