@@ -13,7 +13,7 @@ enum {
     C_SELECT,
     C_WIRE,
     C_RESISTOR,
-    C_NODE
+    C_TERMINAL
 };
 
 class Point {

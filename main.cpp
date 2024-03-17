@@ -60,6 +60,10 @@ int main() {
             case KEY_TWO:
                 current_component = C_RESISTOR;
                 break;
+            case KEY_THREE:
+                current_component = C_TERMINAL;
+                break;
+
             case KEY_SPACE:
                 printf("Simplifying\n");
                 circ.simplify();
