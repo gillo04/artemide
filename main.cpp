@@ -11,8 +11,11 @@
 
 #define SNAP_DIST 30
 
-int main() {
-    Circuit circ("./circuits/parallel.circ");
+int main(int argc, char* argv[]) {
+    Circuit circ;
+    if (argc == 2) {
+        circ = Circuit(argv[1]);
+    }
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Artemide");
 
