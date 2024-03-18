@@ -53,7 +53,7 @@ void draw_resistor(Vector2 start, Vector2 end, float val) {
     // Draw label
     Vector2 middle = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5f), start);
     char buff[10];
-    sprintf(buff, "%.2f", val);
+    sprintf(buff, "%g", val);
     DrawText(buff, middle.x + 20, middle.y + 20, 30, WIRE_COLOR);
 }
 
@@ -66,7 +66,7 @@ void draw_terminal(Vector2 start, Vector2 end) {
     DrawRing(end, 10, 15, 0, 360, 50, WIRE_COLOR);
 }
 
-void draw_current_comp(int current_component) {
+void draw_legend(int current_component) {
     DrawText("0: Seleziona", 10, 10, 40, (Color) {0, 0, 0, 255});
     DrawText("1: Filo", 10, 60, 40, (Color) {0, 0, 0, 255});
     DrawText("2: Resistenza", 10, 110, 40, (Color) {0, 0, 0, 255});

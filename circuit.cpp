@@ -115,7 +115,7 @@ int Circuit::get_snap(Vector2 mouse, int ignore) {
 
 bool Circuit::simplify() {
     bool modified = true;
-    // print_circuit();
+    print_circuit();
 
     while (modified) {
         modified = false;
@@ -225,6 +225,7 @@ bool Circuit::s_series() {
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i].size() == 2) {
             if (comps[nodes[i][0]].type == C_RESISTOR
+                // TODO: wrap in convert_to_wire function
                 && comps[nodes[i][1]].type == C_RESISTOR) { 
                 comps[nodes[i][0]].value += comps[nodes[i][1]].value;
                 comps[nodes[i][1]].value = 0;
@@ -278,6 +279,10 @@ void Circuit::s_remove_dead_components() {
             comps.erase(comps.begin() + i);
             i--;
         }
+        /*if (comps[i].a == comps[i].b) {
+            comps.erase(comps.begin() + i);
+            i--;
+        }*/
     }
 
     // Erase points

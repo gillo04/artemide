@@ -6,11 +6,6 @@
 using namespace std;
 
 enum {
-    S_IDLE,
-    S_TRACING
-};
-
-enum {
     C_SELECT = 0,
     C_WIRE,
     C_RESISTOR,
