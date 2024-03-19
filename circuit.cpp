@@ -8,6 +8,7 @@
 #include "draw.h"
 
 #define SNAP_DIST 30
+#define PARALLEL(a, b) 1/(1/a + 1/b)
 
 Point::Point(Vector2 p) 
     : pos(p) {}
@@ -273,6 +274,7 @@ bool Circuit::s_parallel() {
             if ((arches[i].a == arches[j].a && arches[i].b == arches[j].b)
                 || (arches[i].a == arches[j].b && arches[i].b == arches[j].a)) {
                 changed |= resistor_parallel(i, j);
+                changed |= current_gen_parallel(i, j);
             }
         }
     }
@@ -323,7 +325,7 @@ bool Circuit::resistor_series(int first, int second) {
 
 bool Circuit::resistor_parallel(int first, int second) {
     if (arches[first].type == C_RESISTOR && arches[second].type == C_RESISTOR) {
-        comps[first].value = 1/(1/comps[first].value + 1/comps[second].value);
+        comps[first].value = PARALLEL(comps[first].value, comps[second].value);
         mark_arch_for_deletion(second);
         return true;
     }
@@ -339,6 +341,22 @@ bool Circuit::tension_gen_series(int first, int second) {
         }
         comps[first].value += val;
         convert_to_wire(second);
+        return true;
+    }
+    return false;
+}
+
+bool Circuit::current_gen_parallel(int first, int second) {
+    if (comps[first].type == C_CURRENT_GEN && comps[second].type == C_CURRENT_GEN) { 
+        float val = -comps[second].value;
+        if ((arches[first].a == arches[second].a)
+            || (arches[first].b == arches[second].b)){
+            val = comps[second].value;
+        }
+
+        cout << comps[first].value << " " << val<<endl;
+        comps[first].value = PARALLEL(comps[first].value, val);
+        mark_arch_for_deletion(second);
         return true;
     }
     return false;

@@ -90,4 +90,5 @@ private:
   bool resistor_series(int first, int second);
   bool resistor_parallel(int first, int second);
   bool tension_gen_series(int first, int second);
+  bool current_gen_parallel(int first, int second);
 };
