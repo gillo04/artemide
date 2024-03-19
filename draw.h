@@ -2,8 +2,8 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 800
+#define SCREEN_WIDTH 2000
+#define SCREEN_HEIGHT 1000
 #define ARROW_THICKNESS 4.
 #define RESISTOR_HEIGHT 24
 #define WIRE_COLOR (Color) {0, 0, 0, 255}

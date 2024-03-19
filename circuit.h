@@ -9,7 +9,9 @@ enum {
     C_SELECT = 0,
     C_WIRE,
     C_RESISTOR,
-    C_TERMINAL
+    C_TERMINAL,
+    C_TENSION_GEN,
+    C_CURRENT_GEN
 };
 
 class Point {
@@ -82,7 +84,10 @@ private:
   bool s_parallel();
   // Deletes compoentless wires
   bool s_useless_wires();
-
   // Deletes invalid components
   bool s_remove_dead_components();
+
+  bool resistor_series(int first, int second);
+  bool resistor_parallel(int first, int second);
+  bool tension_gen_series(int first, int second);
 };

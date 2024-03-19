@@ -57,8 +57,8 @@ void draw_resistor(Vector2 start, Vector2 end, float val) {
 
     // Draw label
     Vector2 middle = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5f), start);
-    char buff[14];
     // Ω
+    char buff[14];
     sprintf(buff, "%g", val);
     DrawTextEx(font, buff, Vector2Add(middle, (Vector2) {20, 20}), 35, 0, WIRE_COLOR);
 }
@@ -81,7 +81,22 @@ void draw_generator_circle(Vector2 start, Vector2 end) {
     DrawCircleV(center, 35, (Color) {255, 255, 255, 255});
 }
 
-void draw_current_generator(Vector2 start, Vector2 end) {
+void draw_tension_generator(Vector2 start, Vector2 end, float val) {
+    DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
+
+    Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
+
+    draw_generator_circle(start, end);
+    float angle = Vector2Angle(end, start) * RAD2DEG;
+    DrawTextPro(font, "+", center, (Vector2) {12, 40}, angle-90, 40, 0, WIRE_COLOR);
+    DrawTextPro(font, "|", center, (Vector2) {20, 20}, angle+180, 40, 0, WIRE_COLOR);
+
+    char buff[14];
+    sprintf(buff, "%g", val);
+    DrawTextEx(font, buff, Vector2Add(center, (Vector2) {30, 30}), 35, 0, WIRE_COLOR);
+}
+
+void draw_current_generator(Vector2 start, Vector2 end, float val) {
     DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
 
     Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
@@ -89,37 +104,28 @@ void draw_current_generator(Vector2 start, Vector2 end) {
 
     draw_generator_circle(start, end);
     draw_arrow(Vector2Subtract(center, dir), Vector2Add(dir, center), WIRE_COLOR);
-}
 
-void draw_tension_generator(Vector2 start, Vector2 end) {
-    DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
-
-    Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
-    Vector2 dir = Vector2Scale(Vector2Normalize(Vector2Subtract(end, start)), 25);
-
-    draw_generator_circle(start, end);
-    DrawTextPro(font, "+ |", center, (Vector2) {0, 0}, 45, 40, 10, WIRE_COLOR);
+    char buff[14];
+    sprintf(buff, "%g", val);
+    DrawTextEx(font, buff, Vector2Add(center, (Vector2) {30, 30}), 35, 0, WIRE_COLOR);
 }
 
 void draw_legend(int current_component) {
-    DrawText("0: Seleziona", 10, 10, 40, (Color) {0, 0, 0, 255});
-    DrawText("1: Filo", 10, 60, 40, (Color) {0, 0, 0, 255});
-    DrawText("2: Resistenza", 10, 110, 40, (Color) {0, 0, 0, 255});
-    DrawText("3: Terminale", 10, 160, 40, (Color) {0, 0, 0, 255});
+    char* legend[] {
+        "0: Seleziona",
+        "1: Filo",
+        "2: Resistenza",
+        "3: Terminale",
+        "4: Generatore di tensione",
+        "5: Generatore di corrente",
+    };
 
-    switch (current_component) {
-        case C_SELECT:
-            DrawText("0: Seleziona", 10, 10, 40, (Color) {255, 0, 0, 255});
-            break;
-        case C_WIRE:
-            DrawText("1: Filo", 10, 60, 40, (Color) {255, 0, 0, 255});
-            break;
-        case C_RESISTOR:
-            DrawText("2: Resistenza", 10, 110, 40, (Color) {255, 0, 0, 255});
-            break;
-        case C_TERMINAL:
-            DrawText("3: Terminale", 10, 160, 40, (Color) {255, 0, 0, 255});
-            break;
+    for (int i = 0; i < 6; i++) {
+        Color c = (Color) {0, 0, 0, 255};
+        if (current_component == i) {
+            c = (Color) {255, 0, 0, 255};
+        }
+        DrawText(legend[i], 10, 10 + 50*i, 40, c);
     }
 }
 
@@ -133,6 +139,12 @@ void draw_component(Vector2 a, Vector2 b, int type, float value) {
             break;
         case C_TERMINAL:
             draw_terminal(a, b);
+            break;
+        case C_TENSION_GEN:
+            draw_tension_generator(a, b, value);
+            break;
+        case C_CURRENT_GEN:
+            draw_current_generator(a, b, value);
             break;
     }
 }

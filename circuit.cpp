@@ -194,7 +194,7 @@ void Circuit::build_abstract_circuit() {
         arches[i].value = comps[i].value;
     }
 
-    cout << "pts: " << pts.size() << endl;
+    /*cout << "pts: " << pts.size() << endl;
     // print arches 
     for (int i = 0; i < arches.size(); i++) {
         cout << "arches[" << i << "]: " << arches[i].a << " " << arches[i].b << endl;
@@ -206,7 +206,7 @@ void Circuit::build_abstract_circuit() {
             cout << nodes[i][j] << " ";
         }
         cout << endl;
-    }
+    }*/
 }
 
 void Circuit::mark_arch_for_deletion(int i) {
@@ -226,13 +226,9 @@ void Circuit::convert_to_wire(int c) {
     arches[c].value = 0;
     arches[c].type = C_WIRE;
 
-    /*arches[c].a = -1;
-    arches[c].b = -1;*/
-
-    /*
-    if (arches[c].a == arches[c].b) {
+    /*if (arches[c].a == arches[c].b) {
         return;
-    }
+    }*/
 
     int a = arches[c].a;
     int b = arches[c].b;
@@ -248,19 +244,15 @@ void Circuit::convert_to_wire(int c) {
         if (arches[i].b == b) {
             arches[i].b = a;
         }
-    }*/
+    }
 }
 
 bool Circuit::s_series() {
     bool changed = false;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i].size() == 2) {
-            if (comps[nodes[i][0]].type == C_RESISTOR
-                && comps[nodes[i][1]].type == C_RESISTOR) { 
-                comps[nodes[i][0]].value += comps[nodes[i][1]].value;
-                changed = true;
-                convert_to_wire(nodes[i][1]);
-            }
+            changed |= resistor_series(nodes[i][0], nodes[i][1]);
+            changed |= tension_gen_series(nodes[i][0], nodes[i][1]);
         }
     }
     return changed;
@@ -269,20 +261,18 @@ bool Circuit::s_series() {
 bool Circuit::s_parallel() {
     bool changed = false;
     for (int i = 0; i < arches.size(); i++) {
-        if (arches[i].a == -1 || arches[i].type != C_RESISTOR) {
+        if (arches[i].a == -1) {
             continue;
         }
 
         for (int j = 0; j < arches.size(); j++) {
-            if (i == j || arches[j].a == -1 || arches[j].type != C_RESISTOR) {
+            if (i == j || arches[j].a == -1) {
                 continue;
             }
 
             if ((arches[i].a == arches[j].a && arches[i].b == arches[j].b)
                 || (arches[i].a == arches[j].b && arches[i].b == arches[j].a)) {
-                comps[i].value = 1/(1/comps[i].value + 1/comps[j].value);
-                mark_arch_for_deletion(j);
-                changed = true;
+                changed |= resistor_parallel(i, j);
             }
         }
     }
@@ -305,9 +295,7 @@ bool Circuit::s_remove_dead_components() {
     bool changed = false;
     // Erase components
     for (int i = 0; i < comps.size(); i++) {
-        cout << arches[i].a << " " << arches[i].b << endl;
         if (comps[i].a == -1 || (arches[i].a == arches[i].b && arches[i].type == C_RESISTOR)) {
-            cout << "??" << endl;
             comps.erase(comps.begin() + i);
             arches.erase(arches.begin() + i);
             i--;
@@ -322,4 +310,36 @@ bool Circuit::s_remove_dead_components() {
         }
     }*/
     return changed;
+}
+
+bool Circuit::resistor_series(int first, int second) {
+    if (comps[first].type == C_RESISTOR && comps[second].type == C_RESISTOR) { 
+        comps[first].value += comps[second].value;
+        convert_to_wire(second);
+        return true;
+    }
+    return false;
+}
+
+bool Circuit::resistor_parallel(int first, int second) {
+    if (arches[first].type == C_RESISTOR && arches[second].type == C_RESISTOR) {
+        comps[first].value = 1/(1/comps[first].value + 1/comps[second].value);
+        mark_arch_for_deletion(second);
+        return true;
+    }
+    return false;
+}
+
+bool Circuit::tension_gen_series(int first, int second) {
+    if (comps[first].type == C_TENSION_GEN && comps[second].type == C_TENSION_GEN) { 
+        float val = comps[second].value;
+        if ((arches[first].a == arches[second].a)
+            || (arches[first].b == arches[second].b)){
+            val = -comps[second].value;
+        }
+        comps[first].value += val;
+        convert_to_wire(second);
+        return true;
+    }
+    return false;
 }

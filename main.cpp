@@ -70,6 +70,12 @@ int main(int argc, char* argv[]) {
                     case KEY_THREE:
                         current_component = C_TERMINAL;
                         break;
+                    case KEY_FOUR:
+                        current_component = C_TENSION_GEN;
+                        break;
+                    case KEY_FIVE:
+                        current_component = C_CURRENT_GEN;
+                        break;
 
                     case KEY_SPACE:
                         printf("Simplifying\n");
@@ -91,9 +97,13 @@ int main(int argc, char* argv[]) {
                         circ.add_component(current_component, tmp_a, tmp_b, 0);
                     }
 
-                    if (current_component == C_RESISTOR) {
-                        tmp_value = "";
-                        state = S_WRITING;
+                    switch (current_component) {
+                        case C_RESISTOR:
+                        case C_TENSION_GEN:
+                        case C_CURRENT_GEN:
+                            tmp_value = "";
+                            state = S_WRITING;
+                            break;
                     }
                 }
 
