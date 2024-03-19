@@ -73,6 +73,8 @@ private:
   void build_abstract_circuit();
   // Marks arch for deletion
   void mark_arch_for_deletion(int i);
+  // Converts arch to wire, correcting nodes
+  void convert_to_wire(int c);
 
   // Simplifies series
   bool s_series();
@@ -82,5 +84,5 @@ private:
   bool s_useless_wires();
 
   // Deletes invalid components
-  void s_remove_dead_components();
+  bool s_remove_dead_components();
 };

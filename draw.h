@@ -8,6 +8,8 @@
 #define RESISTOR_HEIGHT 24
 #define WIRE_COLOR (Color) {0, 0, 0, 255}
 
+void init_draw();
+
 void draw_arrow(Vector2 start, Vector2 end, Color color);
 
 void draw_resistor(Vector2 start, Vector2 end, float val);

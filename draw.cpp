@@ -1,15 +1,20 @@
 #include "draw.h"
-#include <stdio.h> 
+#include <iostream> 
 #include <stdlib.h> 
 
 #include "circuit.h"
+
+Font font;
+void init_draw() {
+    font = LoadFontEx("./tnr.ttf", 60, 0, 0);
+}
 
 void draw_arrow(Vector2 start, Vector2 end, Color color) {
     DrawLineEx(start, end, ARROW_THICKNESS, color);
 
     Vector2 dir = Vector2Scale(
                     Vector2Normalize(
-                        Vector2Subtract(end, start)), 20);
+                        Vector2Subtract(end, start)), 15);
 
     DrawLineEx(end, Vector2Add(end, Vector2Rotate(dir, PI*3/4)), ARROW_THICKNESS, color);
     DrawLineEx(end, Vector2Add(end, Vector2Rotate(dir, -PI*3/4)), ARROW_THICKNESS, color);
@@ -52,9 +57,10 @@ void draw_resistor(Vector2 start, Vector2 end, float val) {
 
     // Draw label
     Vector2 middle = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5f), start);
-    char buff[10];
+    char buff[14];
+    // Ω
     sprintf(buff, "%g", val);
-    DrawText(buff, middle.x + 20, middle.y + 20, 30, WIRE_COLOR);
+    DrawTextEx(font, buff, Vector2Add(middle, (Vector2) {20, 20}), 35, 0, WIRE_COLOR);
 }
 
 void draw_wire(Vector2 start, Vector2 end) {
@@ -63,7 +69,36 @@ void draw_wire(Vector2 start, Vector2 end) {
 
 void draw_terminal(Vector2 start, Vector2 end) {
     DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
-    DrawRing(end, 10, 15, 0, 360, 50, WIRE_COLOR);
+    DrawCircleV(end, 10 + ARROW_THICKNESS, WIRE_COLOR);
+    DrawCircleV(end, 10, (Color) {255, 255, 255, 255});
+}
+
+void draw_generator_circle(Vector2 start, Vector2 end) {
+    DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
+
+    Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
+    DrawCircleV(center, 35 + ARROW_THICKNESS, WIRE_COLOR);
+    DrawCircleV(center, 35, (Color) {255, 255, 255, 255});
+}
+
+void draw_current_generator(Vector2 start, Vector2 end) {
+    DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
+
+    Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
+    Vector2 dir = Vector2Scale(Vector2Normalize(Vector2Subtract(end, start)), 25);
+
+    draw_generator_circle(start, end);
+    draw_arrow(Vector2Subtract(center, dir), Vector2Add(dir, center), WIRE_COLOR);
+}
+
+void draw_tension_generator(Vector2 start, Vector2 end) {
+    DrawLineEx(start, end, ARROW_THICKNESS, WIRE_COLOR);
+
+    Vector2 center = Vector2Add(Vector2Scale(Vector2Subtract(end, start), 0.5), start);
+    Vector2 dir = Vector2Scale(Vector2Normalize(Vector2Subtract(end, start)), 25);
+
+    draw_generator_circle(start, end);
+    DrawTextPro(font, "+ |", center, (Vector2) {0, 0}, 45, 40, 10, WIRE_COLOR);
 }
 
 void draw_legend(int current_component) {

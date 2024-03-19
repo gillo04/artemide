@@ -124,7 +124,7 @@ bool Circuit::simplify() {
         modified |= s_series();
         modified |= s_parallel();
         modified |= s_useless_wires();
-        s_remove_dead_components();
+        modified |= s_remove_dead_components();
     }
     return modified;
 }
@@ -194,7 +194,7 @@ void Circuit::build_abstract_circuit() {
         arches[i].value = comps[i].value;
     }
 
-    /*cout << "pts: " << pts.size() << endl;
+    cout << "pts: " << pts.size() << endl;
     // print arches 
     for (int i = 0; i < arches.size(); i++) {
         cout << "arches[" << i << "]: " << arches[i].a << " " << arches[i].b << endl;
@@ -206,7 +206,7 @@ void Circuit::build_abstract_circuit() {
             cout << nodes[i][j] << " ";
         }
         cout << endl;
-    }*/
+    }
 }
 
 void Circuit::mark_arch_for_deletion(int i) {
@@ -220,17 +220,46 @@ void Circuit::mark_arch_for_deletion(int i) {
     comps[i].b = -1;
 }
 
+void Circuit::convert_to_wire(int c) {
+    comps[c].value = 0;
+    comps[c].type = C_WIRE;
+    arches[c].value = 0;
+    arches[c].type = C_WIRE;
+
+    /*arches[c].a = -1;
+    arches[c].b = -1;*/
+
+    /*
+    if (arches[c].a == arches[c].b) {
+        return;
+    }
+
+    int a = arches[c].a;
+    int b = arches[c].b;
+    arches[c].a = -1;
+    arches[c].b = -1;
+
+    nodes[a].insert(nodes[a].begin(), nodes[b].begin(), nodes[b].end());
+    nodes[b].clear();
+    for (int i = 0; i < arches.size(); i++) { // Can it be optimized iterating over nodes[b]?
+        if (arches[i].a == b) {
+            arches[i].a = a;
+        }
+        if (arches[i].b == b) {
+            arches[i].b = a;
+        }
+    }*/
+}
+
 bool Circuit::s_series() {
     bool changed = false;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i].size() == 2) {
             if (comps[nodes[i][0]].type == C_RESISTOR
-                // TODO: wrap in convert_to_wire function
                 && comps[nodes[i][1]].type == C_RESISTOR) { 
                 comps[nodes[i][0]].value += comps[nodes[i][1]].value;
-                comps[nodes[i][1]].value = 0;
-                comps[nodes[i][1]].type = C_WIRE;
                 changed = true;
+                convert_to_wire(nodes[i][1]);
             }
         }
     }
@@ -272,17 +301,18 @@ bool Circuit::s_useless_wires() {
     return changed;
 }
 
-void Circuit::s_remove_dead_components() {
+bool Circuit::s_remove_dead_components() {
+    bool changed = false;
     // Erase components
     for (int i = 0; i < comps.size(); i++) {
-        if (comps[i].a == -1) {
+        cout << arches[i].a << " " << arches[i].b << endl;
+        if (comps[i].a == -1 || (arches[i].a == arches[i].b && arches[i].type == C_RESISTOR)) {
+            cout << "??" << endl;
             comps.erase(comps.begin() + i);
+            arches.erase(arches.begin() + i);
             i--;
+            changed = true;
         }
-        /*if (comps[i].a == comps[i].b) {
-            comps.erase(comps.begin() + i);
-            i--;
-        }*/
     }
 
     // Erase points
@@ -291,4 +321,5 @@ void Circuit::s_remove_dead_components() {
             pts.erase(pts.begin() + i);
         }
     }*/
+    return changed;
 }

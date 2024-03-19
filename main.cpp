@@ -24,6 +24,7 @@ int main(int argc, char* argv[]) {
     }
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Artemide");
+    init_draw();
 
     // State
     int state = S_IDLE;
